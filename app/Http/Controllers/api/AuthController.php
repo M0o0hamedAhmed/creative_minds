@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 class AuthController extends Controller
@@ -36,18 +37,17 @@ class AuthController extends Controller
 
     }
 
-    public function login(Request $request)
-    {
-//        $validator = Validator::make($request->all(), [
-//            'email' => 'required|email',
-//            'password' => 'required|string|min:6'
-//        ]);
-//        if ($validator->fails()) {
-//            return response()->json($validator->errors(),422);
-//        };
-        $credentials = request(['mobile_number', 'password']);
+    public function login(Request $request){
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|numeric',
+            'password' => 'required|string|min:6'
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(),422);
+        };
+        $credentials = $request->only(['mobile_number', 'password']);
 
-        if (!$token = auth()->attempt($credentials)) {
+        if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -98,7 +98,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
 }
